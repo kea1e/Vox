@@ -1,13 +1,8 @@
-// whisper.rn wrapper — initializes the model once and exposes a transcribe() helper.
-//
-// Model files (ggml-tiny.en.bin / ggml-base.en.bin) must be bundled into the
-// native app under ios/Resources or android/app/src/main/assets. See README for
-// the model bundling step. Until the model is bundled, transcribe() throws.
+// whisper.rn wrapper — lazy-loaded so Expo Go can run the app without hitting
+// the native module. Transcribe calls will throw with a friendly message until
+// a dev build is used and the model is bundled. See README for model bundling.
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const Whisper = require('whisper.rn') as {
-  initWhisper: (opts: { filePath: number | string; isBundleAsset?: boolean }) => Promise<WhisperContext>;
-};
+import type { Segment } from '@/types';
 
 type WhisperSegment = { t0: number; t1: number; text: string };
 type WhisperContext = {
@@ -17,8 +12,9 @@ type WhisperContext = {
   ) => { promise: Promise<{ segments: WhisperSegment[] }> };
   release: () => Promise<void>;
 };
-
-import type { Segment } from '@/types';
+type WhisperModule = {
+  initWhisper: (opts: { filePath: number | string; isBundleAsset?: boolean }) => Promise<WhisperContext>;
+};
 
 let _ctx: WhisperContext | null = null;
 let _loading: Promise<WhisperContext> | null = null;
@@ -30,11 +26,23 @@ const MODEL_FILES: Record<WhisperModel, string> = {
   base: 'ggml-base.en.bin',
 };
 
+function loadModule(): WhisperModule {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require('whisper.rn') as WhisperModule;
+  } catch {
+    throw new Error(
+      'Transcription requires a dev build. whisper.rn is a native module and is not available in Expo Go. Run `npx expo prebuild && npx expo run:ios` and bundle ggml-tiny.en.bin — see README.',
+    );
+  }
+}
+
 export async function loadWhisper(model: WhisperModel = 'tiny'): Promise<WhisperContext> {
   if (_ctx) return _ctx;
   if (_loading) return _loading;
+  const mod = loadModule();
   _loading = (async () => {
-    const ctx = await Whisper.initWhisper({
+    const ctx = await mod.initWhisper({
       filePath: MODEL_FILES[model],
       isBundleAsset: true,
     });
