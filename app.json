@@ -1,30 +1,51 @@
 {
   "expo": {
-    "name": "vox-app",
-    "slug": "vox-app",
+    "name": "Vox",
+    "slug": "vox",
+    "scheme": "vox",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0a0a0a"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kea1e.vox",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Vox uses your microphone to record lectures and meetings for on-device transcription. No audio ever leaves your device.",
+        "UIBackgroundModes": ["audio"]
+      }
     },
     "android": {
+      "package": "com.kea1e.vox",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0a0a0a"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": ["RECORD_AUDIO", "FOREGROUND_SERVICE", "FOREGROUND_SERVICE_MICROPHONE"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Vox uses your microphone to record lectures and meetings for on-device transcription."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }
