@@ -136,14 +136,26 @@ export async function getNote(id: string): Promise<Note | null> {
 }
 
 export async function searchNotes(query: string): Promise<Note[]> {
-  if (!query.trim()) return listNotes();
+  const cleaned = query.trim();
+  if (!cleaned) return listNotes();
+  // FTS5 MATCH accepts a mini query language where many punctuation marks are
+  // operators. Strip anything that isn't a word char or whitespace, then turn
+  // each token into a prefix match. Empty tokens (e.g. all-punctuation input)
+  // fall back to a full list.
+  const tokens = cleaned
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((t) => `${t}*`);
+  if (tokens.length === 0) return listNotes();
+
   const db = await getDb();
   const rows = await db.getAllAsync<Row>(
     `SELECT n.* FROM notes n
      JOIN notes_fts f ON f.id = n.id
      WHERE notes_fts MATCH ?
      ORDER BY n.created_at DESC`,
-    `${query.replace(/['"]/g, '')}*`,
+    tokens.join(' '),
   );
   return rows.map(rowToNote);
 }

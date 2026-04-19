@@ -13,13 +13,21 @@ function fmtDate(iso: string): string {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
-type Props = { note: Note };
+type Props = {
+  note: Note;
+  onLongPress?: () => void;
+};
 
-export function NoteCard({ note }: Props) {
-  const preview = note.summary ?? note.transcript.map((s) => s.text).join(' ').slice(0, 140);
+export function NoteCard({ note, onLongPress }: Props) {
+  const preview =
+    note.summary ?? note.transcript.map((s) => s.text).join(' ').slice(0, 140);
   return (
     <Link href={`/note/${note.id}`} asChild>
-      <Pressable className="rounded-2xl border border-border bg-bg-card p-1g active:opacity-70">
+      <Pressable
+        onLongPress={onLongPress}
+        delayLongPress={400}
+        className="rounded-2xl border border-border bg-bg-card p-1g active:opacity-70"
+      >
         <View className="flex-row items-center justify-between">
           <Text className="text-base font-semibold text-fg" numberOfLines={1}>
             {note.title}
