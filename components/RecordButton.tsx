@@ -1,13 +1,5 @@
-import { useEffect } from 'react';
-import { Pressable, View } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-  cancelAnimation,
-  Easing,
-} from 'react-native-reanimated';
+import { useEffect, useRef } from 'react';
+import { Animated, Easing, Pressable, View } from 'react-native';
 
 type Props = {
   recording: boolean;
@@ -16,28 +8,42 @@ type Props = {
 };
 
 export function RecordButton({ recording, disabled, onPress }: Props) {
-  const pulse = useSharedValue(1);
+  const scale = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (recording) {
-      pulse.value = withRepeat(withTiming(1.18, { duration: 900, easing: Easing.inOut(Easing.ease) }), -1, true);
+      opacity.setValue(0.35);
+      const loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(scale, {
+            toValue: 1.18,
+            duration: 900,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(scale, {
+            toValue: 1,
+            duration: 900,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ]),
+      );
+      loop.start();
+      return () => loop.stop();
     } else {
-      cancelAnimation(pulse);
-      pulse.value = withTiming(1, { duration: 200 });
+      scale.setValue(1);
+      opacity.setValue(0);
     }
-  }, [recording, pulse]);
-
-  const ringStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulse.value }],
-    opacity: recording ? 0.35 : 0,
-  }));
+  }, [recording, scale, opacity]);
 
   return (
     <View className="items-center justify-center">
       <Animated.View
         pointerEvents="none"
-        style={ringStyle}
-        className="absolute h-32 w-32 rounded-full bg-accent"
+        style={{ position: 'absolute', transform: [{ scale }], opacity }}
+        className="h-32 w-32 rounded-full bg-accent"
       />
       <Pressable
         onPress={onPress}
@@ -47,9 +53,9 @@ export function RecordButton({ recording, disabled, onPress }: Props) {
         } ${disabled ? 'opacity-40' : ''}`}
       >
         <View
-          className={`${
+          className={
             recording ? 'h-8 w-8 rounded-md bg-fg' : 'h-14 w-14 rounded-full bg-accent'
-          }`}
+          }
         />
       </Pressable>
     </View>
