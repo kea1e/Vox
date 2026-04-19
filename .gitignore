@@ -48,6 +48,13 @@ assets/models/
 # typescript
 *.tsbuildinfo
 
-# generated native folders
-/ios
-/android
+# native build artifacts (keep source, ignore derived)
+/ios/Pods
+/ios/build
+/ios/.xcode.env.local
+/ios/*.xcworkspace/xcuserdata
+/ios/*.xcodeproj/xcuserdata
+/android/build
+/android/.gradle
+/android/app/build
+/android/local.properties
